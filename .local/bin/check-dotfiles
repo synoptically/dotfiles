@@ -1,0 +1,60 @@
+#!/bin/bash
+# Check the dotfiles setup in $HOME.
+# ERROR: a tracked shell script is not executable, or a needed tool or file is missing. Exit 1.
+# WARN: an optional tool is missing, or a build is older than its source.
+
+cd "$HOME" || exit 1
+rc=0
+error() { echo "ERROR: $*"; rc=1; }
+warn() { echo "WARN:  $*"; }
+
+# Every tracked shell script (has a sh/bash shebang, or a .sh name) must be executable.
+files=$(git ls-files) || { error "$HOME is not a git repo"; exit 1; }
+while IFS= read -r f; do
+    read -r first < "$f"
+    case $f in *.sh) ;; *) case $first in '#!'*sh*) ;; *) continue ;; esac ;; esac
+    [ -x "$f" ] || error "$f is a shell script but not executable. Fix: chmod +x ~/$f"
+done <<< "$files"
+
+# Tracked files and commits must not show your username or an email.
+u=$(id -un)
+git grep -q -I -F -- "$u" && error "tracked files contain '$u'. Fix: use \$HOME or ~ instead of the full path."
+git log --all --format='%an %ae %cn %ce' | grep -qE "$u|@" && error "a commit has your username or an email. Fix: rewrite it with an empty email."
+
+need() { command -v "$1" >/dev/null 2>&1 || error "$1 not found. $2"; }
+opt() { command -v "$1" >/dev/null 2>&1 || warn "$1 not found. $2"; }
+
+need dwm "Build: cd ~/dwm-6.8 && sudo make clean install"
+need dwmblocks "Build: cd ~/Projects/dwmblocks-luke && make && cp dwmblocks ~/.local/bin/"
+for s in clock volume bluetooth network power; do need "$s" "Restore ~/.local/bin/$s from git."; done
+need feh "Needed by .xprofile for the wallpaper. Install feh."
+need autorandr "Needed by .xprofile. Install autorandr."
+need autorandr-launcher "Needed by .xprofile. Part of the autorandr package."
+need dmenu "Needed by the power block. Install dmenu."
+need wpctl "Needed by the volume block. Install wireplumber."
+need bluetoothctl "Needed by the bluetooth block. Install bluez."
+need nmcli "Needed by the network block. Install NetworkManager."
+need loginctl "Needed by the power block. Install systemd or elogind."
+
+opt xsetroot "Needed by ~/.local/bin/statusbar."
+opt flatpak "Needed by ~/.local/bin/sober."
+opt pavucontrol "Opened by the volume block."
+opt blueman-manager "Opened by the bluetooth block."
+for c in alacritty nvim btop htop neofetch flameshot vlc; do opt "$c" "Config is in ~/.config/$c."; done
+
+[ -f "$HOME/Downloads/2880477-1278835161.jpg" ] ||
+    error "Wallpaper ~/Downloads/2880477-1278835161.jpg is missing. .xprofile and .fehbg use it."
+
+# A build older than its source means the config change is not live yet.
+stale() { # tool source_dir
+    local bin
+    bin=$(command -v "$1") || return 0
+    [ -n "$(find "$2" -maxdepth 1 \( -name '*.c' -o -name '*.h' \) -newer "$bin")" ] &&
+        warn "$1 is older than its source in $2. Rebuild it."
+    return 0
+}
+stale dwm "$HOME/dwm-6.8"
+stale dwmblocks "$HOME/Projects/dwmblocks-luke"
+
+[ $rc = 0 ] && echo "OK: no errors."
+exit $rc

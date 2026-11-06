@@ -1,0 +1,12 @@
+#!/bin/sh
+# Left click: dmenu power menu.
+printf '\xf3\xb0\x90\xa5 '
+[ "$BLOCK_BUTTON" = 1 ] || exit 0
+c=$(printf 'shutdown\nreboot\nlogout\nsleep\nhibernate\n' | dmenu -p Power) || exit 0
+case $c in
+    shutdown) loginctl poweroff ;;
+    reboot) loginctl reboot ;;
+    logout) pkill -x dwm ;;
+    sleep) loginctl suspend ;;
+    hibernate) loginctl hibernate ;;
+esac

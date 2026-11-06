@@ -1,0 +1,15 @@
+#!/bin/sh
+# Left click: open blueman-manager. Right click: power on/off. Icon shows power state, "C" shows a connected device.
+if [ "$BLOCK_BUTTON" = 1 ]; then
+    # dwmblocks starts before dwm's D-Bus session, so it has no bus address. Copy it from dwm.
+    export DBUS_SESSION_BUS_ADDRESS=$(tr '\0' '\n' < /proc/$(pgrep -xo dwm)/environ | sed -n 's/^DBUS_SESSION_BUS_ADDRESS=//p')
+    setsid -f blueman-manager >/dev/null 2>&1
+fi
+
+if ! bluetoothctl show | grep -q 'Powered: yes'; then
+    printf '\xf3\xb0\x82\xb2'
+elif [ -n "$(bluetoothctl devices Connected)" ]; then
+    printf '\xf3\xb0\x82\xb1 C'
+else
+    printf '\xf3\xb0\x82\xaf'
+fi

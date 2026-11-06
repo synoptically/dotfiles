@@ -1,0 +1,2 @@
+#!/bin/sh
+feh --no-fehbg --bg-fill "$HOME/Downloads/2880477-1278835161.jpg"

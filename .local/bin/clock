@@ -1,0 +1,2 @@
+#!/bin/sh
+TZ=America/New_York date '+%a %d %b %I:%M %p'

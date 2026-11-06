@@ -1,0 +1,13 @@
+#!/bin/sh
+# Left click: mute. Middle: open pavucontrol. Scroll: +-1%.
+S=@DEFAULT_AUDIO_SINK@
+case $BLOCK_BUTTON in
+    1) wpctl set-mute $S toggle ;;
+    2) setsid -f pavucontrol >/dev/null 2>&1 ;;
+    4) wpctl set-volume -l 1.0 $S 1%+ ;;
+    5) wpctl set-volume $S 1%- ;;
+esac
+wpctl get-volume $S 2>/dev/null |
+    awk '$3 == "[MUTED]" { printf "MUTED \xf3\xb0\x96\x81"; f = 1; exit }
+         $1 == "Volume:" { printf "%.0f%% \xf3\xb0\x95\xbe", $2 * 100; f = 1 }
+         END { if (!f) printf "N/A \xf3\xb0\x96\x81" }'

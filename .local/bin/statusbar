@@ -1,0 +1,23 @@
+#!/bin/sh
+
+while true; do
+    VOL=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null |
+        awk '{
+            if ($3 == "[MUTED]") {
+                print "MUTED"
+                exit
+            }
+            if ($1 == "Volume:") {
+                printf "%.0f%%", $2 * 100
+            }
+        }')
+
+    [ -z "$VOL" ] && VOL="N/A"
+
+    DATE=$(TZ="America/New_York" date '+%a %d %b')
+    TIME=$(TZ="America/New_York" date '+%I:%M %p')
+
+    xsetroot -name "$VOL | $DATE $TIME"
+
+    sleep 1
+done
