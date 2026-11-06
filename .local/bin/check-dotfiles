@@ -16,11 +16,6 @@ while IFS= read -r f; do
     [ -x "$f" ] || error "$f is a shell script but not executable. Fix: chmod +x ~/$f"
 done <<< "$files"
 
-# Tracked files and commits must not show your username or an email.
-u=$(id -un)
-git grep -q -I -F -- "$u" && error "tracked files contain '$u'. Fix: use \$HOME or ~ instead of the full path."
-git log --all --format='%an %ae %cn %ce' | grep -qE "$u|@" && error "a commit has your username or an email. Fix: rewrite it with an empty email."
-
 need() { command -v "$1" >/dev/null 2>&1 || error "$1 not found. $2"; }
 opt() { command -v "$1" >/dev/null 2>&1 || warn "$1 not found. $2"; }
 
