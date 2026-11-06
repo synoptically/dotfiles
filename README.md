@@ -78,6 +78,7 @@ Plain `gen-screens` stops here. Place each screen yourself:
 
 - `alacritty`: terminal
 - `pavucontrol`: opened by a click on the volume block
+- `playerctl`: play, pause, next, and previous for media players (MPRIS)
 - `blueman`: opened by a click on the bluetooth block
 - `flatpak` and Sober: `~/.local/bin/sober`
 - `xsetroot`: `~/.local/bin/statusbar`
