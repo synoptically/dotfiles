@@ -4,6 +4,7 @@
 *
 
 !/.gitignore
+!/README.md
 !/.bashrc
 !/.bash_profile
 !/.bash_logout
