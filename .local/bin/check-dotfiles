@@ -37,8 +37,8 @@ opt pavucontrol "Opened by the volume block."
 opt blueman-manager "Opened by the bluetooth block."
 for c in alacritty nvim btop htop neofetch flameshot vlc; do opt "$c" "Config is in ~/.config/$c."; done
 
-[ -f "$HOME/Downloads/2880477-1278835161.jpg" ] ||
-    error "Wallpaper ~/Downloads/2880477-1278835161.jpg is missing. .xprofile and .fehbg use it."
+[ -f "$HOME/wallpapers/2880477-1278835161.jpg" ] ||
+    error "Wallpaper ~/wallpapers/2880477-1278835161.jpg is missing. .xprofile and .fehbg use it."
 
 # A build older than its source means the config change is not live yet.
 stale() { # tool source_dir

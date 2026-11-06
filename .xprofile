@@ -1,6 +1,6 @@
 #!/bin/sh
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:/var/lib/flatpak/exports/bin:$HOME/.local/share/flatpak/exports/bin:$PATH"
-feh --bg-fill ~/Downloads/2880477-1278835161.jpg
+feh --bg-fill ~/wallpapers/2880477-1278835161.jpg
 autorandr --change
 autorandr-launcher --daemonize &
 dwmblocks &

@@ -1,0 +1,34 @@
+#!/bin/bash
+# Put each connected screen at its preferred resolution and fastest refresh rate.
+# The primary screen is first. Then save the layout as the autorandr "default" profile, which .xprofile loads at login.
+usage() {
+    echo "usage: gen-screens [-p row|column] [-h]"
+    echo "  -p row     screens side by side, left to right (default)"
+    echo "  -p column  screens stacked, top to bottom"
+    echo "  -h         show this help"
+}
+pos=row
+while getopts "p:h" opt; do
+    case $opt in
+        p) pos=$OPTARG ;;
+        h) usage; exit 0 ;;
+        *) usage >&2; exit 1 ;;
+    esac
+done
+case $pos in row | column) ;; *) usage >&2; exit 1 ;; esac
+
+q=$(xrandr --query) || exit 1
+outs=$(printf '%s\n' "$q" | awk '/ connected/ {print ($3 == "primary" ? 0 : 1), $1}' | sort | cut -d' ' -f2)
+n=0 x=0 y=0
+for o in $outs; do
+    block=$(printf '%s\n' "$q" | awk -v o="$o" '$1 == o {f = 1; next} /^[^ ]/ {f = 0} f')
+    res=$(printf '%s\n' "$block" | awk '/\+/ {print $1; exit}')
+    [ -n "$res" ] || continue
+    rate=$(printf '%s\n' "$block" | awk -v r="$res" '$1 == r {for (i = 2; i <= NF; i++) {v = $i; gsub(/[*+]/, "", v); if (v ~ /^[0-9.]+$/) print v}}' | sort -rn | head -1)
+    primary=
+    [ $n = 0 ] && primary=--primary
+    if [ $pos = row ]; then at=${x}x0; else at=0x${y}; fi
+    xrandr --output "$o" --mode "$res" --rate "$rate" --pos "$at" $primary || exit 1
+    x=$((x + ${res%x*})); y=$((y + ${res#*x})); n=$((n + 1))
+done
+autorandr --save default --force
