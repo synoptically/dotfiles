@@ -1,34 +1,76 @@
 #!/bin/bash
-# Put each connected screen at its preferred resolution and fastest refresh rate.
-# The primary screen is first. Then save the layout as the autorandr "default" profile, which .xprofile loads at login.
+# Set each screen to its preferred resolution and fastest refresh rate, then save the layout as the autorandr "default" profile. .xprofile loads it at login.
 usage() {
-    echo "usage: gen-screens [-p row|column] [-h]"
-    echo "  -p row     screens side by side, left to right (default)"
-    echo "  -p column  screens stacked, top to bottom"
-    echo "  -h         show this help"
+    echo "usage: gen-screens [-p l2r|r2l|column] [-m NAME:XxY]... [-l] [-h]"
+    echo "  one screen         run with no options"
+    echo "  two screens        -p l2r (default), r2l, or column"
+    echo "  three or more      -m NAME:XxY once per screen. The first -m is primary."
+    echo "  -l                 list screens: name, resolution, refresh rate"
+    echo "  -m NAME:XxY        put screen NAME at X,Y. -m overrides -p."
+    echo "  -h                 show this help"
 }
-pos=row
-while getopts "p:h" opt; do
+pos=l2r pins=()
+while getopts "p:m:lh" opt; do
     case $opt in
         p) pos=$OPTARG ;;
+        m) pins+=("$OPTARG") ;;
+        l) list=1 ;;
         h) usage; exit 0 ;;
         *) usage >&2; exit 1 ;;
     esac
 done
-case $pos in row | column) ;; *) usage >&2; exit 1 ;; esac
+case $pos in l2r | r2l | column) ;; *) usage >&2; exit 1 ;; esac
 
 q=$(xrandr --query) || exit 1
 outs=$(printf '%s\n' "$q" | awk '/ connected/ {print ($3 == "primary" ? 0 : 1), $1}' | sort | cut -d' ' -f2)
-n=0 x=0 y=0
-for o in $outs; do
-    block=$(printf '%s\n' "$q" | awk -v o="$o" '$1 == o {f = 1; next} /^[^ ]/ {f = 0} f')
+[ -n "$outs" ] || { echo "gen-screens: no connected screens" >&2; exit 1; }
+count=$(printf '%s\n' "$outs" | wc -l)
+
+# Print "RES RATE" for a screen: its preferred resolution at the fastest rate.
+best() {
+    local block res
+    block=$(printf '%s\n' "$q" | awk -v o="$1" '$1 == o {f = 1; next} /^[^ ]/ {f = 0} f')
     res=$(printf '%s\n' "$block" | awk '/\+/ {print $1; exit}')
-    [ -n "$res" ] || continue
-    rate=$(printf '%s\n' "$block" | awk -v r="$res" '$1 == r {for (i = 2; i <= NF; i++) {v = $i; gsub(/[*+]/, "", v); if (v ~ /^[0-9.]+$/) print v}}' | sort -rn | head -1)
-    primary=
-    [ $n = 0 ] && primary=--primary
-    if [ $pos = row ]; then at=${x}x0; else at=0x${y}; fi
-    xrandr --output "$o" --mode "$res" --rate "$rate" --pos "$at" $primary || exit 1
-    x=$((x + ${res%x*})); y=$((y + ${res#*x})); n=$((n + 1))
-done
+    [ -n "$res" ] || return 1
+    echo "$res $(printf '%s\n' "$block" | awk -v r="$res" '$1 == r {for (i = 2; i <= NF; i++) {v = $i; gsub(/[*+]/, "", v); if (v ~ /^[0-9.]+$/) print v}}' | sort -rn | head -1)"
+}
+place() { xrandr --output "$1" --mode "$2" --rate "$3" --pos "$4" $5 || exit 1; }
+
+if [ -n "$list" ]; then
+    for o in $outs; do
+        read -r res rate <<< "$(best "$o")" && printf '%-14s %-10s %s Hz\n' "$o" "$res" "$rate"
+    done
+    exit 0
+fi
+
+if [ ${#pins[@]} -gt 0 ]; then
+    names=$(for p in "${pins[@]}"; do echo "${p%%:*}"; done | sort -u)
+    [ "$(printf '%s\n' "$names" | wc -l)" = "$count" ] || { echo "gen-screens: give one -m per screen ($count connected). Run -l to see names." >&2; exit 1; }
+    for p in "${pins[@]}"; do
+        o=${p%%:*} at=${p#*:}
+        printf '%s\n' "$outs" | grep -qx -- "$o" || { echo "gen-screens: no connected screen $o" >&2; exit 1; }
+        [[ $at =~ ^[0-9]+x[0-9]+$ ]] || { echo "gen-screens: bad position in $p. Use NAME:XxY." >&2; exit 1; }
+        best "$o" >/dev/null || { echo "gen-screens: $o has no preferred mode" >&2; exit 1; }
+    done
+    for p in "${pins[@]}"; do
+        o=${p%%:*} at=${p#*:}
+        read -r res rate <<< "$(best "$o")"
+        flag=; [ "$p" = "${pins[0]}" ] && flag=--primary
+        place "$o" "$res" "$rate" "$at" $flag
+    done
+elif [ $count -ge 3 ]; then
+    echo "gen-screens: $count screens. Run -l to see names, then place each with -m NAME:XxY." >&2
+    exit 1
+else
+    if [ $pos = r2l ]; then order=$(printf '%s\n' "$outs" | tac); else order=$outs; fi
+    primary=$(printf '%s\n' "$outs" | head -1)
+    x=0 y=0
+    for o in $order; do
+        read -r res rate <<< "$(best "$o")" || continue
+        flag=; [ "$o" = "$primary" ] && flag=--primary
+        if [ $pos = column ]; then at=0x$y; else at=${x}x0; fi
+        place "$o" "$res" "$rate" "$at" $flag
+        x=$((x + ${res%x*})); y=$((y + ${res#*x}))
+    done
+fi
 autorandr --save default --force

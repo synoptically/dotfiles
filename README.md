@@ -24,9 +24,34 @@ git checkout -f -B main origin/main
 
 Puts each screen at its preferred resolution and fastest refresh rate, with the primary screen first. Saves the result as the autorandr `default` profile. Run it again whenever you change monitors.
 
-- `-p row`: side by side, left to right (default)
-- `-p column`: stacked, top to bottom
-- `-h`: show help
+Each screen gets its preferred resolution and fastest refresh rate.
+
+### One monitor
+
+Run it with no options.
+
+### Two monitors
+
+Run it with no options. If the screens are in the wrong order, pick one with `-p`:
+
+- `-p l2r`: left to right, primary on the left (default)
+- `-p r2l`: right to left, primary on the right
+- `-p column`: stacked top to bottom, primary on top
+
+Example: `~/.local/bin/gen-screens -p r2l`
+
+### Three or more monitors
+
+Plain `gen-screens` stops here. Place each screen yourself:
+
+1. List the screen names: `~/.local/bin/gen-screens -l`
+2. Give one `-m NAME:XxY` per screen. X and Y are the top-left corner in pixels. The first `-m` is the primary screen.
+
+   ```
+   ~/.local/bin/gen-screens -m HDMI-A-0:0x0 -m DisplayPort-1:1920x0 -m DisplayPort-2:3840x0
+   ```
+
+`-h` shows all options.
 
 ## Check
 
