@@ -88,7 +88,6 @@ Plain `gen-screens` stops here. Place each screen yourself:
 ## Optional packages
 
 - `alacritty`: terminal
-- `pavucontrol`: opened by a middle click on the volume block
 - [genmix](https://github.com/synoptically/genmix): audio mixer, opened by a right click on the volume block (`make install` puts it in `~/.local/bin`)
 - `playerctl`: play, pause, next, and previous for media players (used by DWM's keybindings)
 - `blueman`: opened by a click on the bluetooth block
