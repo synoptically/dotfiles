@@ -16,6 +16,17 @@ git fetch -q
 git checkout -f -B main origin/main
 ```
 
+## Build dwm and dwmblocks
+
+Install the build packages under [Required packages](#required-packages) first.
+
+```
+cd ~/dwm-6.8 && sudo make clean install
+cd ~/Projects/dwmblocks-luke && make && cp dwmblocks ~/.local/bin/
+```
+
+Rebuild dwm after changing `config.h`. Restart dwm to load it.
+
 ## Set up screens
 
 ```
@@ -63,8 +74,8 @@ Plain `gen-screens` stops here. Place each screen yourself:
 
 ## Window manager
 
-- [dwm](https://git.suckless.org/dwm) (source in `~/dwm-6.8`): `cd ~/dwm-6.8 && sudo make clean install`
-- [dwmblocks](https://github.com/LukeSmithxyz/dwmblocks) (source in `~/Projects/dwmblocks-luke`): `cd ~/Projects/dwmblocks-luke && make && cp dwmblocks ~/.local/bin/`
+- [dwm](https://git.suckless.org/dwm): source in `~/dwm-6.8`
+- [dwmblocks](https://github.com/LukeSmithxyz/dwmblocks): source in `~/Projects/dwmblocks-luke`
 
 ## Required packages
 
