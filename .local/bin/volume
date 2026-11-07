@@ -1,9 +1,10 @@
 #!/bin/sh
-# Left click: mute. Middle: open pavucontrol. Scroll: +-1%.
+# Left click: mute. Middle: open pavucontrol. Right: open genmix. Scroll: +-1%.
 S=@DEFAULT_AUDIO_SINK@
 case $BLOCK_BUTTON in
     1) wpctl set-mute $S toggle ;;
     2) setsid -f pavucontrol >/dev/null 2>&1 ;;
+    3) setsid -f genmix >/dev/null 2>&1 ;;
     4) wpctl set-volume -l 1.0 $S 1%+ ;;
     5) wpctl set-volume $S 1%- ;;
 esac

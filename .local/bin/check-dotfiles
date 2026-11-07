@@ -34,6 +34,7 @@ need loginctl "Needed by the power block. Install systemd or elogind."
 opt xsetroot "Needed by ~/.local/bin/statusbar."
 opt flatpak "Needed by ~/.local/bin/sober."
 opt pavucontrol "Opened by the volume block."
+opt genmix "Opened by a right click on the volume block. Install from https://github.com/synoptically/genmix"
 opt blueman-manager "Opened by the bluetooth block."
 for c in alacritty nvim btop htop neofetch flameshot vlc; do opt "$c" "Config is in ~/.config/$c."; done
 
